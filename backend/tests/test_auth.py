@@ -67,3 +67,4 @@ def test_auth_me_and_logout():
     # 5. Subsequent request should be 401
     me_after_logout = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert me_after_logout.status_code == 401
+

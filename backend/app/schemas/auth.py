@@ -26,3 +26,4 @@ class MeResponse(BaseModel):
     user: UserOut
     shop: Optional[ShopOut] = None
     license: Optional[LicenseInfo] = None
+

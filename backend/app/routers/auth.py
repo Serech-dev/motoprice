@@ -110,3 +110,4 @@ def logout(
     if token_str:
         revoke_auth_token(db, token_str)
     return {"status": "ok", "message": "Sesión cerrada correctamente."}
+

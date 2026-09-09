@@ -46,3 +46,4 @@ class Shop(Base):
             return 0
         diff = target - now
         return max(0, diff.days)
+

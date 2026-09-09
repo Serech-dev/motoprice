@@ -3,8 +3,8 @@ import { ShieldCheck, Lock, Mail, ArrowRight, Eye, EyeOff, Sparkles, CheckCircle
 import { api } from '../services/api';
 
 export function LoginPage({ onLoginSuccess }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('demo@motoprice.com');
+  const [password, setPassword] = useState('demo123');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -73,6 +73,12 @@ export function LoginPage({ onLoginSuccess }) {
             <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <ShieldCheck className="w-3.5 h-3.5" /> Demo Online
             </span>
+          </div>
+
+          {/* Preloaded credentials notice */}
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>Credenciales demo precargadas. Tocá <strong>Ingresar al Sistema</strong> para entrar.</span>
           </div>
 
           {errorMsg && (
@@ -194,3 +200,4 @@ export function LoginPage({ onLoginSuccess }) {
     </div>
   );
 }
+

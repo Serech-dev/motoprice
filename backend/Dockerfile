@@ -23,3 +23,4 @@ EXPOSE 8000
 
 # Run uvicorn server binding to dynamic $PORT
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+

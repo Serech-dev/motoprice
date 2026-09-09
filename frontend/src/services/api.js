@@ -37,10 +37,16 @@ async function request(endpoint, options = {}) {
 export const api = {
   // Authentication & License
   async login(email, password) {
-    const res = await request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password })
-    });
+    let res;
+    try {
+      res = await request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+    } catch (netErr) {
+      throw new Error(`No se pudo conectar con el servidor backend (${API_BASE}). Si el servicio en Render recién arranca, puede demorar unos 40 segundos en despertar. Por favor reintentá en un momento.`);
+    }
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Error al iniciar sesión' }));
       throw new Error(err.detail || 'Credenciales inválidas');

@@ -75,3 +75,4 @@ Cuando el cliente o tú abran la URL, la pantalla de inicio tiene dos botones de
   - Días restantes de la prueba gratuita de 30 días.
   - El abono mensual acordado de **\$30.000 ARS/mes**.
   - Detalle de servicios de mantenimiento incluidos (soporte, actualización de listas mayoristas, respaldo).
+

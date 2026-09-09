@@ -131,3 +131,4 @@ def require_admin(
             detail="Acceso restringido: Se requieren permisos de Administrador."
         )
     return current_user
+

@@ -28,3 +28,4 @@ class AuthToken(Base):
     last_used_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="tokens", lazy="joined")
+
