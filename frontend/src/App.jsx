@@ -162,7 +162,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-3 pb-24 md:py-6 space-y-4 sm:space-y-6">
         
         {/* Success Alert Toast */}
         {successToast && (
@@ -264,7 +264,7 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/60 py-4 text-center text-xs text-slate-500">
+      <footer className="hidden md:block border-t border-slate-800/80 bg-slate-950/60 py-4 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>MotoPrice © 2026 — Cotizador Rápido & Motor de Precios para Casas de Repuestos de Motos</span>
           <span className="font-mono text-[11px] text-slate-600">

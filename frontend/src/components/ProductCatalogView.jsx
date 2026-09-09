@@ -42,7 +42,7 @@ export function ProductCatalogView() {
   }, [searchQuery, selectedCategory]);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 sm:space-y-6">
       
       {/* Header & Multi-Code Search Input */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
