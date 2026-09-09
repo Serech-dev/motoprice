@@ -1,16 +1,62 @@
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.models.supplier import Supplier
 from app.models.product import Product
 from app.models.setting import AppSetting
+from app.models.shop import Shop
+from app.models.user import User
+from app.services.auth import hash_password
 from app.services.pricing_engine import calculate_sale_price
 
 def seed_database(db: Session):
     """
-    Seeds realistic motorcycle distributors (W-Standard, Pietcard, Far, etc.)
-    and high-velocity motorcycle parts (Honda Wave, Smash 110, Tornado, Titan, Rouser)
-    with compatibility lists and market reference prices.
+    Seeds realistic motorcycle distributors (W-Standard, Pietcard, Far, etc.),
+    demo store with active trial license, and admin/clerk user accounts.
     """
-    # 1. Check if already seeded
+    # 0. Seed Shop and Demo Users if not present
+    shop = db.query(Shop).first()
+    if not shop:
+        shop = Shop(
+            name="Moto Repuestos Demo",
+            cuit="30-71234567-8",
+            phone="11-4567-8900",
+            address="Av. Rivadavia 8500, CABA",
+            license_status="trial",
+            trial_ends_at=datetime.utcnow() + timedelta(days=30),
+            license_expires_at=None,
+            plan_name="Prueba Comercial (1 Mes Bonificado)",
+            monthly_fee_ars=30000.0,
+            contact_email="contacto@motoprice.com"
+        )
+        db.add(shop)
+        db.commit()
+        db.refresh(shop)
+
+    # Seed Users
+    if not db.query(User).filter(User.email == "demo@motoprice.com").first():
+        clerk_user = User(
+            shop_id=shop.id,
+            email="demo@motoprice.com",
+            full_name="Operador Mostrador (Demo)",
+            hashed_password=hash_password("demo123"),
+            role="mostrador",
+            is_active=True
+        )
+        db.add(clerk_user)
+
+    if not db.query(User).filter(User.email == "admin@motoprice.com").first():
+        admin_user = User(
+            shop_id=shop.id,
+            email="admin@motoprice.com",
+            full_name="Administrador Local",
+            hashed_password=hash_password("admin123"),
+            role="admin",
+            is_active=True
+        )
+        db.add(admin_user)
+    db.commit()
+
+    # 1. Check if catalog already seeded
     if db.query(Supplier).first():
         return
 

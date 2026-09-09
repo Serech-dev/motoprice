@@ -7,10 +7,17 @@ import { PriceDiffTable } from './components/PriceDiffTable';
 import { ProductCatalogView } from './components/ProductCatalogView';
 import { SupplierManager } from './components/SupplierManager';
 import { MarginSimulatorModal } from './components/MarginSimulatorModal';
-import { api } from './services/api';
+import { LoginPage } from './components/LoginPage';
+import { LicenseModal } from './components/LicenseModal';
+import { api, AUTH_TOKEN_KEY } from './services/api';
 import { CheckCircle2, History, AlertCircle } from 'lucide-react';
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [shopLicense, setShopLicense] = useState(null);
+  const [shopData, setShopData] = useState(null);
+  const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
+
   const [activeTab, setActiveTab] = useState('quoter'); // 'quoter', 'updater', 'catalog', 'suppliers', 'simulator'
   const [suppliers, setSuppliers] = useState([]);
   const [settings, setSettings] = useState(null);
@@ -19,8 +26,33 @@ export default function App() {
   const [successToast, setSuccessToast] = useState(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
 
-  // Load initial app data
-  const loadInitialData = async () => {
+  // Load user session and initial data
+  const checkAuthAndLoad = async () => {
+    setLoadingInitial(true);
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
+      setCurrentUser(null);
+      setLoadingInitial(false);
+      return;
+    }
+
+    try {
+      const meData = await api.getMe();
+      setCurrentUser(meData.user);
+      setShopData(meData.shop);
+      setShopLicense(meData.license);
+
+      // Now load app catalog data
+      await loadAppData();
+    } catch (err) {
+      console.warn('Session expired or invalid:', err);
+      setCurrentUser(null);
+    } finally {
+      setLoadingInitial(false);
+    }
+  };
+
+  const loadAppData = async () => {
     try {
       const [supList, setBundle, batchList] = await Promise.all([
         api.getSuppliers(),
@@ -31,21 +63,45 @@ export default function App() {
       setSettings(setBundle);
       setRecentBatches(batchList);
 
-      // If batches exist and none active, load the latest batch
       if (batchList.length > 0 && !activeBatch) {
         const latestDetail = await api.getBatch(batchList[0].id);
         setActiveBatch(latestDetail);
       }
     } catch (e) {
-      console.error('Error loading initial data:', e);
-    } finally {
-      setLoadingInitial(false);
+      console.error('Error loading app data:', e);
     }
   };
 
   useEffect(() => {
-    loadInitialData();
+    checkAuthAndLoad();
+
+    const handleAuthExpired = () => {
+      setCurrentUser(null);
+      setShopLicense(null);
+      setShopData(null);
+    };
+
+    window.addEventListener('motoprice:auth-expired', handleAuthExpired);
+    window.addEventListener('motoprice:logout', handleAuthExpired);
+
+    return () => {
+      window.removeEventListener('motoprice:auth-expired', handleAuthExpired);
+      window.removeEventListener('motoprice:logout', handleAuthExpired);
+    };
   }, []);
+
+  const handleLoginSuccess = async (loginData) => {
+    setCurrentUser(loginData.user);
+    setShopLicense(loginData.license);
+    await checkAuthAndLoad();
+  };
+
+  const handleLogout = async () => {
+    await api.logout();
+    setCurrentUser(null);
+    setShopLicense(null);
+    setShopData(null);
+  };
 
   const handleUpdateSettings = async (newSettings) => {
     const updated = await api.updateSettings(newSettings);
@@ -62,7 +118,6 @@ export default function App() {
   const handleApplySuccess = (response) => {
     setSuccessToast(response.message || 'Precios actualizados en catálogo.');
     setTimeout(() => setSuccessToast(null), 6000);
-    // Refresh batch details
     if (activeBatch) {
       api.getBatch(activeBatch.id).then(setActiveBatch);
     }
@@ -81,9 +136,14 @@ export default function App() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
         <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium">Iniciando AutoPrice Engine...</p>
+        <p className="text-sm font-medium">Iniciando MotoPrice Engine...</p>
       </div>
     );
+  }
+
+  // If not logged in, show Login Page
+  if (!currentUser) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (
@@ -94,6 +154,11 @@ export default function App() {
         setActiveTab={setActiveTab}
         settings={settings}
         onUpdateSettings={handleUpdateSettings}
+        user={currentUser}
+        license={shopLicense}
+        shop={shopData}
+        onOpenLicense={() => setIsLicenseModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
@@ -123,14 +188,12 @@ export default function App() {
         {/* Tab 1: Price Updates / Ingestion / Diff View */}
         {activeTab === 'updater' && (
           <div className="space-y-6">
-            {/* Uploader Box */}
             <FileUploader
               suppliers={suppliers}
               settings={settings}
               onBatchCreated={handleBatchCreated}
             />
 
-            {/* If an active batch exists, show KPI Cards and Diff Table */}
             {activeBatch ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -138,7 +201,6 @@ export default function App() {
                     Resumen de Comparativa & Control de Seguridad
                   </h3>
 
-                  {/* Batch Selector if multiple batches exist */}
                   {recentBatches.length > 1 && (
                     <div className="flex items-center gap-2 text-xs">
                       <History className="w-3.5 h-3.5 text-slate-500" />
@@ -193,12 +255,20 @@ export default function App() {
 
       </main>
 
+      {/* License Modal */}
+      <LicenseModal
+        isOpen={isLicenseModalOpen}
+        onClose={() => setIsLicenseModalOpen(false)}
+        license={shopLicense}
+        shop={shopData}
+      />
+
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950/60 py-4 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>AutoPrice © 2026 — Motor de Precios para Casas de Repuestos Automotor</span>
+          <span>MotoPrice © 2026 — Cotizador Rápido & Motor de Precios para Casas de Repuestos de Motos</span>
           <span className="font-mono text-[11px] text-slate-600">
-            FastAPI + React • Cruce OEM/Aftermarket • Soporte Multimoneda
+            FastAPI + React • Cascada de Precios • Licencia Comercial
           </span>
         </div>
       </footer>

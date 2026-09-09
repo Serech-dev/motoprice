@@ -1,0 +1,18 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: motoprice-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./data/motoprice.db
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,https://*.vercel.app
+      - DEFAULT_EXCHANGE_RATE_USD_ARS=1180.0
+    volumes:
+      - backend_data:/app/data
+
+volumes:
+  backend_data:

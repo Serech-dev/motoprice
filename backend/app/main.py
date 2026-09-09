@@ -5,7 +5,13 @@ from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import init_db, SessionLocal
 from app.services.seed_data import seed_database
-from app.routers import suppliers_router, products_router, price_updates_router, settings_router
+from app.routers import (
+    suppliers_router, 
+    products_router, 
+    price_updates_router, 
+    settings_router,
+    auth_router
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,7 +28,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version="1.0.0",
-    description="Automotive Parts Dynamic Price Tracker & Supplier Engine for Auto Parts Shops",
+    description="MotoPrice - Motorcycle Parts Dynamic Price Tracker & Supplier Engine",
     lifespan=lifespan
 )
 
@@ -36,6 +42,7 @@ app.add_middleware(
 )
 
 # Mount Routers
+app.include_router(auth_router)
 app.include_router(suppliers_router)
 app.include_router(products_router)
 app.include_router(price_updates_router)
