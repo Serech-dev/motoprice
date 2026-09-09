@@ -41,6 +41,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Robust route fallback middleware: allows calling /auth/... or /api/auth/... seamlessly
+@app.middleware("http")
+async def api_prefix_fallback(request, call_next):
+    path = request.url.path
+    if not path.startswith("/api") and any(path.startswith(f"/{s}") for s in ["auth", "suppliers", "products", "price-updates", "settings"]):
+        request.scope["path"] = f"/api{path}"
+    response = await call_next(request)
+    return response
+
 # Mount Routers
 app.include_router(auth_router)
 app.include_router(suppliers_router)
@@ -58,6 +67,17 @@ def root():
     }
 
 @app.get("/api/health")
+@app.get("/health")
 def health():
-    return {"status": "ok"}
+    db = SessionLocal()
+    try:
+        from app.models.user import User
+        count = db.query(User).count()
+        if count == 0:
+            seed_database(db)
+        return {"status": "ok"}
+    finally:
+        db.close()
+
+
 

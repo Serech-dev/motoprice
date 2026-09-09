@@ -1,5 +1,9 @@
-const API_BASE = import.meta.env.VITE_API_URL 
+const rawBase = import.meta.env.VITE_API_URL 
   ? import.meta.env.VITE_API_URL.replace(/\/$/, '') 
+  : '';
+
+export const API_BASE = rawBase 
+  ? (rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`)
   : '/api';
 
 export const AUTH_TOKEN_KEY = 'motopriceAuthToken';

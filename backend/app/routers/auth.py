@@ -47,6 +47,11 @@ def _build_license_info(shop: Optional[Shop]) -> Optional[LicenseInfo]:
 @router.post("/login", response_model=LoginResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     """Authenticate user with email and password, returning an auth token."""
+    # Self-healing: if users table is empty in DB, run seed immediately
+    if db.query(User).count() == 0:
+        from app.services.seed_data import seed_database
+        seed_database(db)
+
     user = db.query(User).filter(User.email == payload.email.strip().lower()).first()
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
